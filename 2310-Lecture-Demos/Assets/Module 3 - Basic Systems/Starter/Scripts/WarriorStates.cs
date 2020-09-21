@@ -48,11 +48,23 @@ namespace StateUtility
         public override void OnEnter()
         {
             //TODO: What do we need to do when the Walk animation state starts?
+            anim.PlayLoop(clipID);
         }
 
         public override void Update()
         {
             //TODO: What should we be checking for to see if we should switch states?
+            //Top priority: Check if we died.
+            if (fsm.GetTrigger(Warrior.Keywords.deathTrigger))
+                fsm.SetState(StateID.DIE_STATE);
+
+            //Second priority: Check if attack button was pressed.
+            else if (fsm.GetTrigger(Warrior.Keywords.attackTrigger))
+                fsm.SetState(StateID.ATTACK_STATE);
+
+            //Finally, see if we should start moving.
+            else if (!fsm.GetVar(Warrior.Keywords.moveInput))
+                fsm.SetState(StateID.IDLE_STATE);
         }
 
     }
@@ -105,16 +117,22 @@ namespace StateUtility
         public override void OnEnter()
         {
             //TODO: What do we need to do here?
+            anim.PlayOnce(clipID);
+            fsm.SetVar(Warrior.Keywords.canMove,false);
         }
 
         public override void Update()
         {
             //TODO: What's our condition for exiting the death animation?
+            if (anim.IsDone() && fsm.GetTrigger(Warrior.Keywords.respawnTrigger))
+                fsm.SetState(StateID.IDLE_STATE);
+
         }
 
         public override void OnExit()
         {
             //TODO: What do we need to do here?
+            fsm.SetVar(Warrior.Keywords.canMove,true);
         }
     }
 }

@@ -54,21 +54,47 @@ public class WarriorController : MonoBehaviour
         fsm.AddVar(Warrior.Keywords.moveInput, false);
 
         //TODO: Add states to FSM.
+
+        fsm.AddState(StateID.IDLE_STATE,new IdleState(idleID,animator,fsm));
+        fsm.AddState(StateID.WALK_STATE, new WalkState(walkID, animator, fsm));
+        fsm.AddState(StateID.ATTACK_STATE, new AttackState(attackID, animator, fsm));
+        fsm.AddState(StateID.DIE_STATE, new DieState(deathID, animator, fsm));
+
+        fsm.SetState(StateID.IDLE_STATE);
     }
 
     void Update()
     {
         //TODO: Add horizontal movement update.
+        float inputAxis = Input.GetAxis("Horizontal");
+
+        fsm.SetVar(Warrior.Keywords.moveInput, inputAxis != 0.0f);
+
+        if (inputAxis!=0.0f && fsm.GetVar(Warrior.Keywords.canMove))
+        {
+            bool faceLeft = inputAxis < 0;
+
+            animator.spriteRenderer.flipX = faceLeft;
+
+            transform.position += inputAxis * walkSpeed * Time.deltaTime * Vector3.right;
+        }
 
         //TODO: Add input check for attack action.
+        if (Input.GetKeyDown(KeyCode.E))
+            fsm.SetTrigger(Warrior.Keywords.attackTrigger);
 
         //TODO: Add input check for respawn action.
+        if (Input.GetKeyDown(KeyCode.R))
+            fsm.SetTrigger(Warrior.Keywords.respawnTrigger);
 
         //TODO: Update completed FSM.
+        fsm.Update();
     }
 
     private void OnTriggerEnter(Collider other)
     {
         //TODO: Add check for hazard object and kill the player.
+        if (other.CompareTag(Warrior.Keywords.deathTag))
+            fsm.SetTrigger(Warrior.Keywords.deathTrigger);
     }
 }
